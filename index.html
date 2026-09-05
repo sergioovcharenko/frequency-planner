@@ -59,6 +59,35 @@
       </div>
     </section>
 
+    <section class="section-card" aria-labelledby="repeater-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">RX — приймання · TX — передавання</p>
+          <h2 id="repeater-title">Ретранслятор</h2>
+        </div>
+        <button class="button button-secondary" id="edit-repeater-button" type="button">Змінити</button>
+      </div>
+
+      <div class="repeater-grid">
+        <div class="repeater-summary">
+          <label>Модель
+            <select id="repeater-model" disabled></select>
+          </label>
+          <p id="repeater-status" class="data-completeness"></p>
+          <a id="repeater-source" class="source-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Джерело характеристик</a>
+        </div>
+        <div id="repeater-fields" class="channel-config"></div>
+      </div>
+
+      <div id="custom-repeater" class="custom-repeater" hidden>
+        <label>Назва моделі
+          <input id="custom-repeater-name" type="text" placeholder="Наприклад: Польовий ретранслятор" disabled>
+        </label>
+        <div id="custom-range-list" class="custom-range-list"></div>
+        <button class="button button-ghost" id="add-custom-range" type="button" disabled>Додати частоту або діапазон</button>
+      </div>
+    </section>
+
     <section class="section-card" aria-labelledby="matrix-title">
       <div class="section-heading">
         <div>
