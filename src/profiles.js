@@ -9,7 +9,7 @@ const deepFreeze = (value) => {
 };
 
 export const FACTORY_PROFILE = deepFreeze({
-  schemaVersion: 1,
+  schemaVersion: 2,
   name: 'Штатний профіль',
   control: {
     lower: {
@@ -40,6 +40,12 @@ export const FACTORY_PROFILE = deepFreeze({
       5180, 5200, 5220, 5240, 5260, 5280, 5300, 5320, 5500,
       5520, 5540, 5560, 5580, 5600, 5620, 5640, 5660, 5680
     ]
+  },
+  repeater: {
+    modelId: null,
+    customName: '',
+    selections: { videoRx: null, videoTx: null, controlTx: null },
+    customRanges: []
   }
 });
 

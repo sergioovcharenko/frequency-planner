@@ -1,3 +1,5 @@
+import { getRepeaterModel } from './repeaters.js';
+
 const GROUPS = ['5.2', '5.5', '5.8'];
 
 const error = (code, message, details = {}) => ({ code, message, ...details });
@@ -46,6 +48,53 @@ export const validateCatalog = (catalog) => {
   return valid ? [] : [error('INVALID_CATALOG', 'Каталог має містити 18 унікальних числових частот.')];
 };
 
+export const validateRepeater = (repeater) => {
+  if (!repeater) return [error('INVALID_REPEATER', 'Структура налаштувань ретранслятора пошкоджена.')];
+  if (repeater.modelId === null) return [];
+  if (repeater.modelId !== 'custom') {
+    return getRepeaterModel(repeater.modelId)
+      ? []
+      : [error('UNKNOWN_REPEATER_MODEL', 'Невідома модель ретранслятора.')];
+  }
+
+  const errors = [];
+  if (!repeater.customName?.trim()) {
+    errors.push(error('MISSING_REPEATER_NAME', 'Вкажіть назву ретранслятора.'));
+  }
+  if (!Array.isArray(repeater.customRanges)) {
+    return [...errors, error('INVALID_REPEATER_RANGES', 'Список частот ретранслятора пошкоджений.')];
+  }
+
+  const ids = new Set();
+  let hasVideoRx = false;
+  for (const channel of repeater.customRanges) {
+    if (ids.has(channel?.id)) {
+      errors.push(error('DUPLICATE_REPEATER_RANGE', 'Ідентифікатор частоти ретранслятора повторюється.'));
+    }
+    ids.add(channel?.id);
+
+    const validType = ['rx', 'tx'].includes(channel?.direction)
+      && ['video', 'control'].includes(channel?.purpose);
+    if (!validType) {
+      errors.push(error('INVALID_REPEATER_CHANNEL', 'Оберіть напрямок і призначення каналу ретранслятора.'));
+    }
+    if (channel?.direction === 'rx' && channel?.purpose === 'video') hasVideoRx = true;
+
+    const validRange = Number.isFinite(channel?.start)
+      && Number.isFinite(channel?.end)
+      && channel.start >= 0
+      && channel.end >= 0
+      && channel.start <= channel.end;
+    if (!validRange) {
+      errors.push(error('INVALID_REPEATER_RANGE', 'Початок і кінець частоти мають бути невід’ємними числами, початок — не більшим за кінець.'));
+    }
+  }
+  if (!hasVideoRx) {
+    errors.push(error('MISSING_VIDEO_RX', 'Додайте діапазон приймання відео.'));
+  }
+  return errors;
+};
+
 export const validateProfile = (profile) => {
   if (!profile?.control?.lower || !profile?.control?.upper || !profile?.video) {
     return [error('INVALID_PROFILE', 'Структура профілю пошкоджена.')];
@@ -54,7 +103,8 @@ export const validateProfile = (profile) => {
   const errors = [
     ...validateRange(profile.control.lower),
     ...validateRange(profile.control.upper),
-    ...validateCatalog(profile.video.catalog)
+    ...validateCatalog(profile.video.catalog),
+    ...validateRepeater(profile.repeater)
   ];
   const duplicate = findDuplicateAssignment(profile.video.matrix);
   if (duplicate) {

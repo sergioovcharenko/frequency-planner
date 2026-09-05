@@ -71,21 +71,83 @@ export const analyzeFrequency = (frequency, context = {}) => {
   return { frequency, level, label: LEVELS[level].label, marginMHz, reasons };
 };
 
+export const analyzeVideoCompatibility = (frequency, rx) => {
+  if (!rx) {
+    return {
+      level: 'unknown',
+      label: 'Потрібне уточнення',
+      reason: 'Не вказано діапазон приймання відео ретранслятора.'
+    };
+  }
+  if (rx.precision !== 'exact') {
+    return {
+      level: 'unknown',
+      label: 'Потрібне уточнення',
+      reason: `${rx.label ?? `${rx.start} МГц`} — номінальне позначення без точних меж приймання.`
+    };
+  }
+  if (frequency >= rx.start && frequency <= rx.end) {
+    return {
+      level: 'good',
+      label: 'Сумісний із RX',
+      reason: `${frequency} МГц входить у діапазон приймання ${rx.start}–${rx.end} МГц.`
+    };
+  }
+  return {
+    level: 'danger',
+    label: 'Несумісний із RX',
+    reason: `${frequency} МГц не входить у діапазон приймання ${rx.start}–${rx.end} МГц.`
+  };
+};
+
+const mergeResults = (interference, compatibility, missing) => {
+  let level = interference.level;
+  let label = interference.label;
+
+  if (compatibility.level === 'danger') {
+    level = 'danger';
+    label = compatibility.label;
+  } else if (level === 'good' && compatibility.level === 'unknown') {
+    level = 'unknown';
+    label = compatibility.label;
+  } else if (level === 'good' && compatibility.level === 'good') {
+    label = compatibility.label;
+  }
+
+  const reasons = [...new Set([...interference.reasons, compatibility.reason])];
+  if (missing.length) {
+    reasons.push(`Бракує даних: ${missing.join(', ')}.`);
+    if (level === 'good') {
+      level = 'unknown';
+      label = 'Потрібне уточнення';
+    }
+  }
+
+  return { ...interference, level, label, reasons };
+};
+
 export const analyzeMatrix = (profile, repeater = {}) => {
   const controlRanges = [
     { ...profile.control.lower, name: 'Нижній діапазон' },
     { ...profile.control.upper, name: 'Верхній діапазон' }
   ];
-  return profile.video.matrix.flatMap((row, groupIndex) =>
-    row.map((frequency, channelIndex) => ({
-      ...analyzeFrequency(frequency, {
-        occupiedRanges: repeater.occupiedRanges ?? [],
-        controlRanges
-      }),
+  const transmitters = repeater.transmitters ?? repeater.occupiedRanges ?? [];
+  const exactTransmitters = transmitters.filter(({ precision }) => precision !== 'nominal');
+  const occupiedRanges = exactTransmitters;
+  const harmonicRanges = [...controlRanges, ...exactTransmitters];
+  const hasCompatibilityContext = Object.hasOwn(repeater, 'videoRx') || Object.hasOwn(repeater, 'missing');
+  const missing = Array.isArray(repeater.missing) ? repeater.missing : [];
+  return profile.video.matrix.flatMap((row, groupIndex) => row.map((frequency, channelIndex) => {
+    const interference = analyzeFrequency(frequency, { occupiedRanges, controlRanges: harmonicRanges });
+    const result = hasCompatibilityContext
+      ? mergeResults(interference, analyzeVideoCompatibility(frequency, repeater.videoRx ?? null), missing)
+      : interference;
+    return {
+      ...result,
       group: profile.video.groups[groupIndex],
       channel: channelIndex + 1
-    }))
-  );
+    };
+  }));
 };
 
 export const rankRecommendations = (results) => [...results].sort((left, right) => {
