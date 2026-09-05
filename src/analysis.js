@@ -28,7 +28,8 @@ const harmonicMatches = (frequency, controlRanges) => {
 export const analyzeFrequency = (frequency, context = {}) => {
   const occupiedRanges = Array.isArray(context.occupiedRanges) ? context.occupiedRanges : [];
   const controlRanges = Array.isArray(context.controlRanges) ? context.controlRanges : [];
-  if (!occupiedRanges.length && !controlRanges.length) {
+  const advisoryRanges = Array.isArray(context.advisoryRanges) ? context.advisoryRanges : [];
+  if (!occupiedRanges.length && !controlRanges.length && !advisoryRanges.length) {
     return {
       frequency,
       level: 'unknown',
@@ -64,6 +65,10 @@ export const analyzeFrequency = (frequency, context = {}) => {
     for (const match of harmonics) {
       reasons.push(`${frequency} МГц потрапляє в інтервал ${match.order}-ї гармоніки (${match.name}); це розрахункова можливість, а не підтверджена завада.`);
     }
+  }
+
+  for (const match of harmonicMatches(frequency, advisoryRanges)) {
+    reasons.push(`${frequency} МГц потрапляє в інтервал ${match.order}-ї гармоніки (${match.name}); це теоретичне попередження, яке потребує вимірювання спектроаналізатором.`);
   }
 
   if (!reasons.length) reasons.push('За заданими правилами суттєвого конфлікту не знайдено.');
@@ -117,7 +122,7 @@ const mergeResults = (interference, compatibility, missing) => {
   const reasons = [...new Set([...interference.reasons, compatibility.reason])];
   if (missing.length) {
     reasons.push(`Бракує даних: ${missing.join(', ')}.`);
-    if (level === 'good') {
+    if (level === 'good' && compatibility.level !== 'good') {
       level = 'unknown';
       label = 'Потрібне уточнення';
     }
@@ -134,11 +139,14 @@ export const analyzeMatrix = (profile, repeater = {}) => {
   const transmitters = repeater.transmitters ?? repeater.occupiedRanges ?? [];
   const exactTransmitters = transmitters.filter(({ precision }) => precision !== 'nominal');
   const occupiedRanges = exactTransmitters;
-  const harmonicRanges = [...controlRanges, ...exactTransmitters];
   const hasCompatibilityContext = Object.hasOwn(repeater, 'videoRx') || Object.hasOwn(repeater, 'missing');
   const missing = Array.isArray(repeater.missing) ? repeater.missing : [];
   return profile.video.matrix.flatMap((row, groupIndex) => row.map((frequency, channelIndex) => {
-    const interference = analyzeFrequency(frequency, { occupiedRanges, controlRanges: harmonicRanges });
+    const interference = analyzeFrequency(frequency, {
+      occupiedRanges,
+      controlRanges: exactTransmitters,
+      advisoryRanges: controlRanges
+    });
     const result = hasCompatibilityContext
       ? mergeResults(interference, analyzeVideoCompatibility(frequency, repeater.videoRx ?? null), missing)
       : interference;
