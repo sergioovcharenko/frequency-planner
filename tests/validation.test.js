@@ -5,7 +5,8 @@ import {
   findDuplicateAssignment,
   validateCatalog,
   validateProfile,
-  validateRange
+  validateRange,
+  validateRepeater
 } from '../src/validation.js';
 import { cloneFactoryProfile } from '../src/profiles.js';
 
@@ -66,4 +67,53 @@ test('profile validation returns duplicate and range errors without throwing', (
   const codes = validateProfile(profile).map((error) => error.code);
   assert.ok(codes.includes('OUT_OF_BOUNDS'));
   assert.ok(codes.includes('DUPLICATE_VIDEO'));
+});
+
+test('custom repeater accepts a single frequency and a proper range', () => {
+  const repeater = {
+    modelId: 'custom',
+    customName: 'Польовий',
+    selections: {},
+    customRanges: [
+      { id: 'a', direction: 'rx', purpose: 'video', start: 4900, end: 6000, label: 'RX' },
+      { id: 'b', direction: 'tx', purpose: 'video', start: 1300, end: 1300, label: 'TX' }
+    ]
+  };
+  assert.deepEqual(validateRepeater(repeater), []);
+});
+
+test('custom repeater rejects reversed ranges and a missing name', () => {
+  const errors = validateRepeater({
+    modelId: 'custom',
+    customName: '',
+    selections: {},
+    customRanges: [
+      { id: 'bad', direction: 'tx', purpose: 'video', start: 900, end: 800, label: '' }
+    ]
+  });
+  assert.ok(errors.some(({ code }) => code === 'INVALID_REPEATER_RANGE'));
+  assert.ok(errors.some(({ code }) => code === 'MISSING_REPEATER_NAME'));
+  assert.ok(errors.some(({ code }) => code === 'MISSING_VIDEO_RX'));
+});
+
+test('custom repeater rejects duplicate ids and invalid channel types', () => {
+  const errors = validateRepeater({
+    modelId: 'custom',
+    customName: 'Польовий',
+    selections: {},
+    customRanges: [
+      { id: 'same', direction: 'rx', purpose: 'video', start: 4900, end: 6000, label: 'RX' },
+      { id: 'same', direction: 'sideways', purpose: 'audio', start: -1, end: Number.NaN, label: '' }
+    ]
+  });
+  const codes = errors.map(({ code }) => code);
+  assert.ok(codes.includes('DUPLICATE_REPEATER_RANGE'));
+  assert.ok(codes.includes('INVALID_REPEATER_CHANNEL'));
+  assert.ok(codes.includes('INVALID_REPEATER_RANGE'));
+});
+
+test('current profile requires repeater settings structure', () => {
+  const profile = cloneFactoryProfile();
+  delete profile.repeater;
+  assert.ok(validateProfile(profile).some(({ code }) => code === 'INVALID_REPEATER'));
 });

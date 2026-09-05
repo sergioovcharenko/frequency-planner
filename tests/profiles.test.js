@@ -32,6 +32,16 @@ test('factory profile supplies nine switch positions and eighteen alternatives',
   assert.equal(new Set(FACTORY_PROFILE.video.catalog).size, 18);
 });
 
+test('factory profile starts with no repeater selected', () => {
+  assert.equal(FACTORY_PROFILE.schemaVersion, 2);
+  assert.deepEqual(FACTORY_PROFILE.repeater, {
+    modelId: null,
+    customName: '',
+    selections: { videoRx: null, videoTx: null, controlTx: null },
+    customRanges: []
+  });
+});
+
 test('factory profile clone can be edited without mutating defaults', () => {
   const clone = cloneFactoryProfile();
   clone.control.lower.start = 420;

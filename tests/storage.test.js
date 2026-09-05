@@ -67,3 +67,30 @@ test('reset removes saved settings and returns factory values', () => {
   assert.deepEqual(reset, FACTORY_PROFILE);
   assert.equal(store.load().profile.control.upper.end, 895);
 });
+
+test('schema v1 settings migrate without losing control and video changes', () => {
+  const storage = memoryStorage();
+  const legacy = structuredClone(FACTORY_PROFILE);
+  delete legacy.repeater;
+  legacy.schemaVersion = 1;
+  legacy.control.lower.start = 420;
+  storage.setItem('frequency-planner.settings.v1', JSON.stringify(legacy));
+
+  const loaded = createSettingsStore(storage, FACTORY_PROFILE).load();
+
+  assert.equal(loaded.profile.schemaVersion, 2);
+  assert.equal(loaded.profile.control.lower.start, 420);
+  assert.deepEqual(loaded.profile.repeater, FACTORY_PROFILE.repeater);
+  assert.match(loaded.notice, /оновлено/i);
+});
+
+test('v2 settings take priority over a legacy profile', () => {
+  const storage = memoryStorage();
+  const current = cloneFactoryProfile();
+  current.control.lower.start = 430;
+  storage.setItem('frequency-planner.settings.v2', JSON.stringify(current));
+  const legacy = { ...current, schemaVersion: 1, control: { ...current.control, lower: { ...current.control.lower, start: 420 } } };
+  storage.setItem('frequency-planner.settings.v1', JSON.stringify(legacy));
+
+  assert.equal(createSettingsStore(storage, FACTORY_PROFILE).load().profile.control.lower.start, 430);
+});

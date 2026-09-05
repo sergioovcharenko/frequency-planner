@@ -11,17 +11,27 @@ test('duplicate message names the frequency and SA group without K label', () =>
 });
 
 test('factory controls stay locked until confirmation', () => {
-  assert.deepEqual(initialUIState(), { controlEditing: false, videoEditing: false });
+  assert.deepEqual(initialUIState(), { controlEditing: false, repeaterEditing: false, videoEditing: false });
   assert.deepEqual(reduceUIState(initialUIState(), { type: 'CONFIRM_CONTROL_EDIT' }), {
     controlEditing: true,
+    repeaterEditing: false,
     videoEditing: false
   });
 });
 
-test('cancel locks both editing sections again', () => {
-  const editing = { controlEditing: true, videoEditing: true };
+test('repeater editing is locked until confirmation', () => {
+  assert.deepEqual(reduceUIState(initialUIState(), { type: 'CONFIRM_REPEATER_EDIT' }), {
+    controlEditing: false,
+    repeaterEditing: true,
+    videoEditing: false
+  });
+});
+
+test('cancel locks all editing sections again', () => {
+  const editing = { controlEditing: true, repeaterEditing: true, videoEditing: true };
   assert.deepEqual(reduceUIState(editing, { type: 'CANCEL_EDITING' }), {
     controlEditing: false,
+    repeaterEditing: false,
     videoEditing: false
   });
 });
