@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="description" content="Планувальник і попередня перевірка частот комплексу БпЛА">
+  <title>Frequency Planner</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="shell header-inner">
+      <div>
+        <p class="eyebrow">БпЛА · перевірка сумісності</p>
+        <h1>Frequency Planner</h1>
+      </div>
+      <div class="header-status"><span class="status-dot"></span>Локальний розрахунок</div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="intro">
+      <div>
+        <h2>Штатний профіль комплексу</h2>
+        <p>Перевірка діапазонів керування та дев’яти відеопозицій SA/SB. Результат є попередньою оцінкою, а не вимірюванням спектру.</p>
+      </div>
+      <button class="button button-secondary" id="restore-button" type="button">Відновити штатні</button>
+    </section>
+
+    <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+
+    <section class="section-card" aria-labelledby="control-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Керування · ППРЧ 30 + 30/с</p>
+          <h2 id="control-title">Діапазони керування</h2>
+        </div>
+        <button class="button button-secondary" id="edit-control-button" type="button">Змінити</button>
+      </div>
+
+      <div class="range-grid">
+        <article class="range-panel">
+          <div class="range-title"><strong>Нижній діапазон</strong><span>H · горизонтальна</span></div>
+          <div class="field-grid">
+            <label>Початок, МГц<input id="lower-start" type="number" min="410" max="485" step="1" disabled></label>
+            <label>Кінець, МГц<input id="lower-end" type="number" min="410" max="485" step="1" disabled></label>
+          </div>
+          <p class="range-limit">Дозволено: 410–485 МГц</p>
+        </article>
+        <article class="range-panel">
+          <div class="range-title"><strong>Верхній діапазон</strong><span>V · вертикальна</span></div>
+          <div class="field-grid">
+            <label>Початок, МГц<input id="upper-start" type="number" min="820" max="895" step="1" disabled></label>
+            <label>Кінець, МГц<input id="upper-end" type="number" min="820" max="895" step="1" disabled></label>
+          </div>
+          <p class="range-limit">Дозволено: 820–895 МГц</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-card" aria-labelledby="matrix-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">SA — група · SB — позиція</p>
+          <h2 id="matrix-title">Матриця відеоканалів</h2>
+        </div>
+        <button class="button button-secondary" id="edit-video-button" type="button">Змінити</button>
+      </div>
+
+      <div class="workspace-grid">
+        <div>
+          <div class="active-switches" aria-live="polite">
+            <span id="active-sa">SA · 5.2</span>
+            <span id="active-sb">SB · частота 5180</span>
+          </div>
+          <div class="matrix-scroll">
+            <table class="matrix-table">
+              <thead><tr><th>SB</th><th>SA · 5.2</th><th>SA · 5.5</th><th>SA · 5.8</th></tr></thead>
+              <tbody id="matrix-body"></tbody>
+            </table>
+          </div>
+          <div class="legend" aria-label="Позначення статусів">
+            <span><i class="legend-dot good"></i>Підходить</span>
+            <span><i class="legend-dot watch"></i>Обережно</span>
+            <span><i class="legend-dot risk"></i>Можлива завада</span>
+            <span><i class="legend-dot danger"></i>Небезпечно</span>
+            <span><i class="legend-dot unknown"></i>Не перевірено</span>
+          </div>
+        </div>
+
+        <aside class="result-panel" aria-labelledby="result-title">
+          <div>
+            <p class="section-kicker">Вибрана позиція</p>
+            <h2 id="result-title"><span id="result-frequency">5180</span> МГц</h2>
+          </div>
+          <span id="result-status" class="status-badge risk">Можлива завада</span>
+          <p id="result-position" class="muted">SA 5.2 · частота 5180 МГц</p>
+          <ul id="result-reasons" class="reason-list"></ul>
+          <div class="recommendation">
+            <strong>Найкращі позиції за наявними даними</strong>
+            <ol id="recommendation-list"></ol>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <div id="edit-actions" class="edit-actions" hidden>
+      <span>Є незбережені зміни</span>
+      <div>
+        <button class="button button-ghost" id="cancel-button" type="button">Скасувати</button>
+        <button class="button button-primary" id="save-button" type="button">Зберегти</button>
+      </div>
+    </div>
+  </main>
+
+  <dialog id="confirm-dialog">
+    <form method="dialog">
+      <p class="section-kicker">Підтвердження</p>
+      <h2 id="dialog-title">Змінити штатні налаштування?</h2>
+      <p id="dialog-text">Зміна штатних частот може вплинути на зв’язок. Продовжити?</p>
+      <div class="dialog-actions">
+        <button class="button button-ghost" value="cancel">Скасувати</button>
+        <button class="button button-primary" id="dialog-confirm" value="confirm">Підтвердити</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
