@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { analyzeFrequency, analyzeMatrix, analyzeVideoCompatibility, rankRecommendations } from '../src/analysis.js';
 import { cloneFactoryProfile } from '../src/profiles.js';
+import { resolveRepeater } from '../src/repeaters.js';
 
 test('direct occupied-range overlap is dangerous', () => {
   const result = analyzeFrequency(5580, {
@@ -33,6 +34,18 @@ test('mathematical harmonic match is reported as possible interference', () => {
   assert.equal(result.level, 'risk');
   assert.match(result.reasons.join(' '), /6-ї гармоніки/i);
   assert.match(result.reasons.join(' '), /розрахункова можливість/i);
+});
+
+test('broad FHSS harmonic bands are advisory and do not hide a compatible channel', () => {
+  const result = analyzeFrequency(5180, {
+    occupiedRanges: [],
+    controlRanges: [],
+    advisoryRanges: [{ start: 820, end: 895, name: 'Верхній діапазон ППРЧ' }]
+  });
+
+  assert.equal(result.level, 'good');
+  assert.match(result.reasons.join(' '), /6-ї гармоніки/i);
+  assert.match(result.reasons.join(' '), /потребує вимірювання/i);
 });
 
 test('missing comparison data never returns a safe status', () => {
@@ -120,7 +133,7 @@ test('missing repeater data prevents a safe status', () => {
   assert.match(result.reasons.join(' '), /бракує даних/i);
 });
 
-test('nominal repeater TX does not create a false exact conflict', () => {
+test('nominal repeater TX stays a warning when exact RX is compatible', () => {
   const profile = cloneFactoryProfile();
   profile.video.matrix[0][0] = 1200;
   profile.control.lower.start = 410;
@@ -133,7 +146,8 @@ test('nominal repeater TX does not create a false exact conflict', () => {
     missing: ['точна частота передавання відео']
   })[0];
   assert.notEqual(result.level, 'danger');
-  assert.equal(result.level, 'unknown');
+  assert.equal(result.level, 'good');
+  assert.match(result.reasons.join(' '), /Бракує даних/i);
 });
 
 test('exact repeater TX harmonics are included in video risk analysis', () => {
@@ -150,4 +164,23 @@ test('exact repeater TX harmonics are included in video risk analysis', () => {
   })[0];
   assert.equal(result.level, 'risk');
   assert.match(result.reasons.join(' '), /5-ї гармоніки \(TX ретранслятора\)/i);
+});
+
+test('Vishchun channels inside exact RX stay green when only FHSS harmonics and incomplete TX data remain', () => {
+  const profile = cloneFactoryProfile();
+  const repeater = resolveRepeater({
+    modelId: 'vishchun-5-8',
+    selections: {
+      videoRx: 'rx-4990-5945',
+      videoTx: 'tx-1300',
+      controlTx: null
+    }
+  });
+
+  const results = analyzeMatrix(profile, repeater);
+
+  assert.equal(results.length, 9);
+  assert.ok(results.every(({ level }) => level === 'good'));
+  assert.ok(results.every(({ label }) => label === 'Сумісний із RX'));
+  assert.match(results[0].reasons.join(' '), /Бракує даних/i);
 });

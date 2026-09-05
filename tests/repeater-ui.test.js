@@ -7,7 +7,32 @@ import { buildRepeaterViewModel, repeaterModelOptions } from '../src/ui.js';
 
 test('repeater model options include presets and custom mode', () => {
   assert.deepEqual(repeaterModelOptions().map(({ value }) => value), [
-    '', 'tactech-mavic', 'vishchun-5-8', 'custom'
+    '',
+    'tactech-mavic',
+    'vishchun-5-8',
+    'urs-ar-v2',
+    'toro-puta-maxi',
+    'brave-urs-ar-v2-61-72',
+    'brave-eho-lite-75',
+    'brave-skybridge',
+    'brave-urs-ar-c-v1',
+    'brave-echo',
+    'brave-donbas',
+    'brave-nebokrai-49-61',
+    'brave-4pm-33-58',
+    'brave-4pm-58-67',
+    'brave-4pm-58-45',
+    'brave-k4rm4',
+    'brave-sine-link-video',
+    'brave-lanker',
+    'brave-air-repeater',
+    'brave-nebokrai-digital',
+    'brave-vishchun-p',
+    'brave-nebokrai-33-58',
+    'brave-fpv-matrice-30',
+    'brave-phantom-18',
+    'brave-rz-m',
+    'custom'
   ]);
 });
 
