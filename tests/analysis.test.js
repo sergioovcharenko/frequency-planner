@@ -48,6 +48,29 @@ test('broad FHSS harmonic bands are advisory and do not hide a compatible channe
   assert.match(result.reasons.join(' '), /потребує вимірювання/i);
 });
 
+test('all matching harmonic orders are reported for one FHSS range', () => {
+  const result = analyzeFrequency(5180, {
+    occupiedRanges: [],
+    controlRanges: [],
+    advisoryRanges: [{ start: 410, end: 485, name: 'Нижній діапазон ППРЧ' }]
+  });
+
+  assert.deepEqual(result.advisoryHarmonics.map(({ order }) => order), [11, 12]);
+  assert.match(result.reasons.join(' '), /11-ї гармоніки/i);
+  assert.match(result.reasons.join(' '), /12-ї гармоніки/i);
+});
+
+test('20 MHz video channel width detects a harmonic at the channel edge', () => {
+  const result = analyzeFrequency(5825, {
+    occupiedRanges: [],
+    controlRanges: [],
+    advisoryRanges: [{ start: 410, end: 485, name: 'Нижній діапазон ППРЧ' }]
+  });
+
+  assert.deepEqual(result.advisoryHarmonics.map(({ order }) => order), [12, 13, 14]);
+  assert.match(result.reasons.join(' '), /12-ї гармоніки/i);
+});
+
 test('missing comparison data never returns a safe status', () => {
   assert.equal(analyzeFrequency(5700, { occupiedRanges: [], controlRanges: [] }).level, 'unknown');
 });
