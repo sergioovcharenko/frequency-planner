@@ -30,10 +30,14 @@ test('catalog contains unique sourced preset models', () => {
   assert.ok(REPEATER_MODELS.every(({ sourceUrl }) => sourceUrl.startsWith('https://')));
 });
 
-test('catalog labels omit marketplace prefixes and every model has usable video data', () => {
+test('catalog labels omit marketplace prefixes and every model exposes video data or an explicit source limitation', () => {
   assert.ok(REPEATER_MODELS.every(({ name }) => !/^BRAVE1\s*[—-]/i.test(name)));
-  assert.ok(REPEATER_MODELS.every(({ channels }) => channels.videoRx.length > 0));
-  assert.ok(REPEATER_MODELS.every(({ channels }) => channels.videoTx.length > 0));
+  assert.ok(REPEATER_MODELS.every(({ channels, channelNotes }) =>
+    channels.videoRx.length > 0 || channelNotes?.videoRx
+  ));
+  assert.ok(REPEATER_MODELS.every(({ channels, channelNotes }) =>
+    channels.videoTx.length > 0 || channelNotes?.videoTx
+  ));
 });
 
 test('every model provides a control frequency or an explicit control note', () => {
@@ -53,9 +57,31 @@ test('Vishchun-P uses the published 4990–5945 MHz receiver range', () => {
 test('Matrice 30 repeater exposes its published video and control choices', () => {
   const model = getRepeaterModel('brave-fpv-matrice-30');
 
-  assert.deepEqual(model.channels.videoRx.map(({ start }) => start), [1200, 3300, 5800, 6000]);
-  assert.equal(model.channels.controlTx[0].start, 100);
-  assert.equal(model.channels.controlTx[0].end, 2600);
+  assert.deepEqual(model.channels.videoRx.map(({ start, end }) => [start, end]), [[5000, 5800]]);
+  assert.deepEqual(model.channels.videoTx.map(({ start, end }) => [start, end]), [[1200, 1200]]);
+  assert.equal(model.channels.controlTx[0].start, 433);
+  assert.equal(model.channels.controlTx[0].end, 2800);
+});
+
+test('4PM pairs do not invent an unverified RX to TX direction', () => {
+  for (const id of ['brave-4pm-33-58', 'brave-4pm-58-67', 'brave-4pm-58-45']) {
+    const model = getRepeaterModel(id);
+    assert.deepEqual(model.channels.videoRx, []);
+    assert.deepEqual(model.channels.videoTx, []);
+    assert.match(model.channelNotes.videoRx, /напрямок RX.*TX.*не опубліковано/i);
+    assert.match(model.channelNotes.videoTx, /напрямок RX.*TX.*не опубліковано/i);
+  }
+});
+
+test('modular AR-V2 base exposes only documented receiver and transmitter choices', () => {
+  const model = getRepeaterModel('urs-ar-v2');
+
+  assert.deepEqual(model.channels.videoRx.map(({ start, end }) => [start, end]), [[4990, 5945]]);
+  assert.deepEqual(model.channels.videoTx.map(({ start, end }) => [start, end]), [
+    [1060, 1380],
+    [3310, 3495],
+    [5645, 5945]
+  ]);
 });
 
 test('Nebokrai exposes the exact RX range printed in its Brave1 title', () => {
