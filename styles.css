@@ -74,6 +74,7 @@ input:disabled, select:disabled { opacity: .78; background: color-mix(in srgb, v
 .matrix-table { width: 100%; min-width: 560px; border-collapse: separate; border-spacing: 8px; }
 .matrix-table th { color: var(--muted); font-size: .78rem; text-align: center; }
 .matrix-table tbody th { width: 44px; }
+.channel-button small { display: block; margin-top: 4px; color: var(--muted); font-size: .67rem; font-weight: 650; }
 .channel-cell { min-height: 82px; border-radius: 12px; border: 2px solid transparent; overflow: hidden; }
 .channel-cell.selected { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
 .channel-cell.good { background: var(--green-soft); color: var(--green); }
@@ -89,6 +90,7 @@ input:disabled, select:disabled { opacity: .78; background: color-mix(in srgb, v
 .legend { display: flex; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: .76rem; margin-top: 10px; }
 .legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
 .legend-dot.good { background: var(--green); }.legend-dot.watch { background: var(--yellow); }.legend-dot.risk { background: var(--orange); }.legend-dot.danger { background: var(--red); }.legend-dot.unknown { background: var(--muted); }
+.harmonic-help { margin: 9px 0 0; color: var(--muted); font-size: .76rem; line-height: 1.45; }
 .result-panel { border-left: 1px solid var(--line); padding-left: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 13px; }
 .result-panel h2 { font-size: 1.7rem; }
 .status-badge { border-radius: 999px; padding: 7px 11px; font-size: .8rem; font-weight: 750; }
