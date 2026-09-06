@@ -15,6 +15,14 @@ export const reduceUIState = (state, action) => {
 export const formatDuplicateMessage = ({ frequency, firstGroup }) =>
   `${frequency} МГц уже використовується в групі SA ${firstGroup}. Виберіть іншу частоту.`;
 
+export const formatHarmonicSummary = (result) => {
+  const orders = [...new Set([
+    ...(result.harmonics ?? []).map(({ order }) => order),
+    ...(result.advisoryHarmonics ?? []).map(({ order }) => order)
+  ])].sort((left, right) => left - right);
+  return orders.length ? `Гармоніки: ${orders.join(', ')}` : '';
+};
+
 const selectors = {
   lowerStart: '#lower-start', lowerEnd: '#lower-end',
   upperStart: '#upper-start', upperEnd: '#upper-end'
@@ -272,7 +280,8 @@ export const mountUI = ({ document, profile: initialProfile, store }) => {
           const button = document.createElement('button');
           button.type = 'button';
           button.className = 'channel-button';
-          button.innerHTML = `<strong>${frequency}</strong><span>${result.label}</span>`;
+          const harmonicSummary = formatHarmonicSummary(result);
+          button.innerHTML = `<strong>${frequency}</strong><span>${result.label}</span>${harmonicSummary ? `<small>${harmonicSummary}</small>` : ''}`;
           button.addEventListener('click', () => {
             selected = { groupIndex, channelIndex };
             render();
