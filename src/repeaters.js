@@ -10,6 +10,11 @@ const range = (id, label, start, end) => ({ id, label, start, end, precision: 'e
 const nominal = (id, label, frequency) => ({ id, label, start: frequency, end: frequency, precision: 'nominal' });
 const nominalRange = (id, label, start, end) => ({ id, label, start, end, precision: 'nominal' });
 const videoOnlyNotes = { controlTx: 'Окремий канал керування не передбачено цією відеоконфігурацією.' };
+const unverifiedPairNotes = {
+  videoRx: 'BRAVE1 вказує пару частот, але напрямок RX → TX не опубліковано.',
+  videoTx: 'BRAVE1 вказує пару частот, але напрямок RX → TX не опубліковано.',
+  controlTx: 'Частоту керування у відкритому джерелі не вказано.'
+};
 const arV2ControlChannels = () => [
   nominalRange('control-433-500', '433–500 МГц', 433, 500),
   nominalRange('control-740-790', '740–790 МГц', 740, 790),
@@ -60,13 +65,11 @@ export const REPEATER_MODELS = deepFreeze([
     sourceUrl: 'https://uarobo.com/blog/modulniy-retranslator-fpv-kvardrokopteriv-ar-v2/',
     channels: {
       controlTx: arV2ControlChannels(),
-      videoRx: [
-        range('rx-4990-5945', '4990–5945 МГц', 4990, 5945),
-        range('rx-6100-7200', '6100–7200 МГц', 6100, 7200)
-      ],
+      videoRx: [range('rx-4990-5945', '4990–5945 МГц', 4990, 5945)],
       videoTx: [
-        nominalRange('tx-1060-1380', '1.06–1.38 ГГц', 1060, 1380),
-        nominalRange('tx-5645-5945', '5.645–5.945 ГГц', 5645, 5945)
+        range('tx-1060-1380', '1.06–1.38 ГГц', 1060, 1380),
+        range('tx-3310-3495', '3.31–3.495 ГГц', 3310, 3495),
+        range('tx-5645-5945', '5.645–5.945 ГГц', 5645, 5945)
       ]
     }
   },
@@ -138,33 +141,33 @@ export const REPEATER_MODELS = deepFreeze([
     id: 'brave-4pm-33-58',
     name: '4PM Relay 3.3/5.8',
     sourceUrl: 'https://market-brave1.delta.mil.gov.ua/retransliatory/5016/',
-    channelNotes: videoOnlyNotes,
+    channelNotes: unverifiedPairNotes,
     channels: {
       controlTx: [],
-      videoRx: [nominal('rx-3300', '3.3 ГГц', 3300), nominal('rx-5800', '5.8 ГГц', 5800)],
-      videoTx: [nominal('tx-3300', '3.3 ГГц', 3300), nominal('tx-5800', '5.8 ГГц', 5800)]
+      videoRx: [],
+      videoTx: []
     }
   },
   {
     id: 'brave-4pm-58-67',
     name: '4PM Relay 5.8/6.7',
     sourceUrl: 'https://market-brave1.delta.mil.gov.ua/retransliatory/5008/',
-    channelNotes: videoOnlyNotes,
+    channelNotes: unverifiedPairNotes,
     channels: {
       controlTx: [],
-      videoRx: [nominal('rx-5800', '5.8 ГГц', 5800), nominal('rx-6700', '6.7 ГГц', 6700)],
-      videoTx: [nominal('tx-5800', '5.8 ГГц', 5800), nominal('tx-6700', '6.7 ГГц', 6700)]
+      videoRx: [],
+      videoTx: []
     }
   },
   {
     id: 'brave-4pm-58-45',
     name: '4PM Relay 5.8/4.5',
     sourceUrl: 'https://market-brave1.delta.mil.gov.ua/retransliatory/5006/',
-    channelNotes: videoOnlyNotes,
+    channelNotes: unverifiedPairNotes,
     channels: {
       controlTx: [],
-      videoRx: [nominal('rx-5800', '5.8 ГГц', 5800), nominal('rx-4500', '4.5 ГГц', 4500)],
-      videoTx: [nominal('tx-5800', '5.8 ГГц', 5800), nominal('tx-4500', '4.5 ГГц', 4500)]
+      videoRx: [],
+      videoTx: []
     }
   },
   {
@@ -195,21 +198,11 @@ export const REPEATER_MODELS = deepFreeze([
   {
     id: 'brave-fpv-matrice-30',
     name: 'FPV ретранслятор для DJI Matrice 30',
-    sourceUrl: 'https://flasharmy.com.ua/ru/fpv-retranslyator-dlya-dji-matrice-30-fpv-nosiy',
+    sourceUrl: 'https://prom.ua/m1206705398562018842-fpv-retranslyator-ggts.html',
     channels: {
-      controlTx: [nominalRange('control-100-2600', '100–2600 МГц', 100, 2600)],
-      videoRx: [
-        nominal('rx-1200', '1.2 ГГц', 1200),
-        nominal('rx-3300', '3.3 ГГц', 3300),
-        nominal('rx-5800', '5.8 ГГц', 5800),
-        nominalRange('rx-6000-7200', '6.0–7.2 ГГц', 6000, 7200)
-      ],
-      videoTx: [
-        nominal('tx-1200', '1.2 ГГц', 1200),
-        nominal('tx-3300', '3.3 ГГц', 3300),
-        nominal('tx-5800', '5.8 ГГц', 5800),
-        nominalRange('tx-6000-7200', '6.0–7.2 ГГц', 6000, 7200)
-      ]
+      controlTx: [nominalRange('control-433-2800', '433–2800 МГц · на вибір', 433, 2800)],
+      videoRx: [range('rx-5000-5800', '5.0–5.8 ГГц', 5000, 5800)],
+      videoTx: [nominal('tx-1200', '1.2 ГГц', 1200)]
     }
   },
   ...[
