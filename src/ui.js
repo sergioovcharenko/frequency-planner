@@ -41,6 +41,7 @@ export const buildRepeaterViewModel = (config, editing) => {
     disabled: !editing,
     sourceUrl: model?.sourceUrl ?? '',
     fields: model?.channels ?? { videoRx: [], videoTx: [], controlTx: [] },
+    channelNotes: model?.channelNotes ?? {},
     customRanges: config?.customRanges ?? [],
     missing: resolveRepeater(config).missing
   };
@@ -112,7 +113,7 @@ export const mountUI = ({ document, profile: initialProfile, store }) => {
       if (!channels.length) {
         const empty = document.createElement('div');
         empty.className = 'empty-channel';
-        empty.textContent = `${label}: виробник не вказав точний варіант.`;
+        empty.textContent = `${label}: ${view.channelNotes[key] ?? 'дані у відкритих джерелах відсутні.'}`;
         return empty;
       }
       const field = document.createElement('label');
