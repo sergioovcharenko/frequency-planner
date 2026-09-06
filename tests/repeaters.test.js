@@ -9,38 +9,37 @@ test('catalog contains unique sourced preset models', () => {
     'vishchun-5-8',
     'urs-ar-v2',
     'toro-puta-maxi',
-    'brave-urs-ar-v2-61-72',
-    'brave-eho-lite-75',
     'brave-skybridge',
     'brave-urs-ar-c-v1',
-    'brave-echo',
-    'brave-donbas',
     'brave-nebokrai-49-61',
     'brave-4pm-33-58',
     'brave-4pm-58-67',
     'brave-4pm-58-45',
-    'brave-k4rm4',
-    'brave-sine-link-video',
-    'brave-lanker',
-    'brave-air-repeater',
-    'brave-nebokrai-digital',
     'brave-vishchun-p',
     'brave-nebokrai-33-58',
     'brave-fpv-matrice-30',
-    'brave-phantom-18',
-    'brave-rz-m'
+    'urs-ar-v2-30-49-12',
+    'urs-ar-v2-30-49-33',
+    'urs-ar-v2-49-58-12',
+    'urs-ar-v2-49-58-33',
+    'urs-ar-v2-61-72-12',
+    'urs-ar-v2-61-72-33',
+    'urs-ar-v2-33-12'
   ]);
-  assert.equal(new Set(REPEATER_MODELS.map(({ id }) => id)).size, 24);
+  assert.equal(new Set(REPEATER_MODELS.map(({ id }) => id)).size, 20);
   assert.ok(REPEATER_MODELS.every(({ sourceUrl }) => sourceUrl.startsWith('https://')));
 });
 
-test('catalog contains twenty Brave1 models linked to their product cards', () => {
-  const braveModels = REPEATER_MODELS.filter(({ sourceUrl }) =>
-    sourceUrl.startsWith('https://market-brave1.delta.mil.gov.ua/retransliatory/')
-  );
+test('catalog labels omit marketplace prefixes and every model has usable video data', () => {
+  assert.ok(REPEATER_MODELS.every(({ name }) => !/^BRAVE1\s*[—-]/i.test(name)));
+  assert.ok(REPEATER_MODELS.every(({ channels }) => channels.videoRx.length > 0));
+  assert.ok(REPEATER_MODELS.every(({ channels }) => channels.videoTx.length > 0));
+});
 
-  assert.equal(braveModels.length, 20);
-  assert.ok(braveModels.every(({ sourceUrl }) => /\/retransliatory\/\d+\/$/.test(sourceUrl)));
+test('every model provides a control frequency or an explicit control note', () => {
+  assert.ok(REPEATER_MODELS.every(({ channels, channelNotes }) =>
+    channels.controlTx.length > 0 || channelNotes?.controlTx
+  ));
 });
 
 test('Vishchun-P uses the published 4990–5945 MHz receiver range', () => {
@@ -80,6 +79,15 @@ test('SkyBridge keeps the documented conversion directions', () => {
   assert.deepEqual(model.channels.controlTx.map(({ start }) => start), [433]);
 });
 
+test('video-only model resolves without requesting an undocumented control frequency', () => {
+  const resolved = resolveRepeater({
+    modelId: 'brave-nebokrai-33-58',
+    selections: { videoRx: 'rx-3300', videoTx: 'tx-5800', controlTx: null }
+  });
+
+  assert.equal(resolved.missing.some((item) => /керування/i.test(item)), false);
+});
+
 test('Vishchun exposes exact RX without treating it as TX', () => {
   const model = getRepeaterModel('vishchun-5-8');
   assert.deepEqual(model.channels.videoRx[0], {
@@ -102,7 +110,8 @@ test('resolver returns selected TX channels only as transmitters', () => {
 
   assert.equal(resolved.videoRx.start, 4990);
   assert.deepEqual(resolved.transmitters.map(({ start, end }) => [start, end]), [[1300, 1300]]);
-  assert.match(resolved.missing.join(' '), /керування/i);
+  assert.equal(resolved.missing.some((item) => /керування/i.test(item)), false);
+  assert.match(resolved.missing.join(' '), /точна частота передавання відео/i);
 });
 
 test('custom resolver never treats receive ranges as transmitters', () => {

@@ -12,26 +12,22 @@ test('repeater model options include presets and custom mode', () => {
     'vishchun-5-8',
     'urs-ar-v2',
     'toro-puta-maxi',
-    'brave-urs-ar-v2-61-72',
-    'brave-eho-lite-75',
     'brave-skybridge',
     'brave-urs-ar-c-v1',
-    'brave-echo',
-    'brave-donbas',
     'brave-nebokrai-49-61',
     'brave-4pm-33-58',
     'brave-4pm-58-67',
     'brave-4pm-58-45',
-    'brave-k4rm4',
-    'brave-sine-link-video',
-    'brave-lanker',
-    'brave-air-repeater',
-    'brave-nebokrai-digital',
     'brave-vishchun-p',
     'brave-nebokrai-33-58',
     'brave-fpv-matrice-30',
-    'brave-phantom-18',
-    'brave-rz-m',
+    'urs-ar-v2-30-49-12',
+    'urs-ar-v2-30-49-33',
+    'urs-ar-v2-49-58-12',
+    'urs-ar-v2-49-58-33',
+    'urs-ar-v2-61-72-12',
+    'urs-ar-v2-61-72-33',
+    'urs-ar-v2-33-12',
     'custom'
   ]);
 });
@@ -43,6 +39,14 @@ test('preset view model exposes source, selections, and locked state', () => {
   assert.equal(view.sourceUrl, 'https://www.blue-bird.tech/en/products/wireless-retranslator-blue-bird-repeater/');
   assert.equal(view.disabled, true);
   assert.equal(view.fields.videoRx[0].id, 'rx-4990-5945');
+});
+
+test('preset view model exposes an explicit note for an unavailable control channel', () => {
+  const profile = cloneFactoryProfile();
+  profile.repeater.modelId = 'brave-nebokrai-33-58';
+  const view = buildRepeaterViewModel(profile.repeater, false);
+
+  assert.match(view.channelNotes.controlTx, /не ретранслює|не передбачено/i);
 });
 
 test('custom view model exposes editable normalized rows', () => {
