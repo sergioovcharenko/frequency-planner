@@ -12,13 +12,18 @@ const distanceToRange = (frequency, range) => {
   return 0;
 };
 
+const VIDEO_CHANNEL_HALF_WIDTH_MHZ = 10;
+
 const harmonicMatches = (frequency, controlRanges) => {
   const matches = [];
+  const videoStart = frequency - VIDEO_CHANNEL_HALF_WIDTH_MHZ;
+  const videoEnd = frequency + VIDEO_CHANNEL_HALF_WIDTH_MHZ;
   for (const range of controlRanges) {
     for (let order = 2; order <= 15; order += 1) {
-      if (frequency >= order * range.start && frequency <= order * range.end) {
+      const harmonicStart = order * range.start;
+      const harmonicEnd = order * range.end;
+      if (videoEnd >= harmonicStart && videoStart <= harmonicEnd) {
         matches.push({ order, name: range.name ?? 'Діапазон керування' });
-        break;
       }
     }
   }
@@ -35,6 +40,8 @@ export const analyzeFrequency = (frequency, context = {}) => {
       level: 'unknown',
       label: LEVELS.unknown.label,
       marginMHz: null,
+      harmonics: [],
+      advisoryHarmonics: [],
       reasons: ['Недостатньо даних для порівняння.']
     };
   }
@@ -67,13 +74,14 @@ export const analyzeFrequency = (frequency, context = {}) => {
     }
   }
 
-  for (const match of harmonicMatches(frequency, advisoryRanges)) {
+  const advisoryHarmonics = harmonicMatches(frequency, advisoryRanges);
+  for (const match of advisoryHarmonics) {
     reasons.push(`${frequency} МГц потрапляє в інтервал ${match.order}-ї гармоніки (${match.name}); це теоретичне попередження, яке потребує вимірювання спектроаналізатором.`);
   }
 
   if (!reasons.length) reasons.push('За заданими правилами суттєвого конфлікту не знайдено.');
 
-  return { frequency, level, label: LEVELS[level].label, marginMHz, reasons };
+  return { frequency, level, label: LEVELS[level].label, marginMHz, harmonics, advisoryHarmonics, reasons };
 };
 
 export const analyzeVideoCompatibility = (frequency, rx) => {
