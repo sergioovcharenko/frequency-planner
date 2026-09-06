@@ -3,7 +3,15 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import { cloneFactoryProfile } from '../src/profiles.js';
-import { buildRepeaterViewModel, repeaterModelOptions } from '../src/ui.js';
+import { buildRepeaterViewModel, formatHarmonicSummary, repeaterModelOptions } from '../src/ui.js';
+
+test('harmonic summary lists unique exact and advisory orders separately from status', () => {
+  assert.equal(formatHarmonicSummary({
+    harmonics: [{ order: 5 }],
+    advisoryHarmonics: [{ order: 11 }, { order: 12 }, { order: 11 }]
+  }), 'Гармоніки: 5, 11, 12');
+  assert.equal(formatHarmonicSummary({ harmonics: [], advisoryHarmonics: [] }), '');
+});
 
 test('repeater model options include presets and custom mode', () => {
   assert.deepEqual(repeaterModelOptions().map(({ value }) => value), [
