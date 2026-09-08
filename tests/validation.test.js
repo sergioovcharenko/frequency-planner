@@ -26,6 +26,15 @@ test('range rejects values outside approved limits', () => {
   );
 });
 
+test('upper control range can be edited through 970 MHz but not above it', () => {
+  const profile = cloneFactoryProfile();
+  profile.control.upper.end = 970;
+  assert.deepEqual(validateProfile(profile), []);
+
+  profile.control.upper.end = 971;
+  assert.ok(validateProfile(profile).some(({ code }) => code === 'OUT_OF_BOUNDS'));
+});
+
 test('range rejects a start that is not lower than its end', () => {
   assert.equal(
     validateRange({ min: 410, max: 485, start: 470, end: 420 })[0].code,
