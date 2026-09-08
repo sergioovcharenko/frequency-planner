@@ -94,3 +94,18 @@ test('v2 settings take priority over a legacy profile', () => {
 
   assert.equal(createSettingsStore(storage, FACTORY_PROFILE).load().profile.control.lower.start, 430);
 });
+
+test('saved v2 settings receive the current editable limits without losing user values', () => {
+  const storage = memoryStorage();
+  const saved = cloneFactoryProfile();
+  saved.control.lower.start = 430;
+  saved.control.upper.max = 895;
+  storage.setItem('frequency-planner.settings.v2', JSON.stringify(saved));
+
+  const loaded = createSettingsStore(storage, FACTORY_PROFILE).load();
+
+  assert.equal(loaded.profile.control.upper.max, 970);
+  assert.equal(loaded.profile.control.upper.end, 895);
+  assert.equal(loaded.profile.control.lower.start, 430);
+  assert.match(loaded.notice, /оновлено/i);
+});
