@@ -91,4 +91,7 @@ test('page contains the repeater editor controls', async () => {
   ]) {
     assert.match(html, new RegExp(`id=["']${id}["']`));
   }
+  assert.match(html, /дев’яти відеоканалів SA\/SB/);
+  assert.match(html, /id="upper-end"[^>]*max="970"/);
+  assert.match(html, /Дозволено: 820–970 МГц/);
 });
