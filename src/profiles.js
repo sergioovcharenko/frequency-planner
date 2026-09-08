@@ -22,7 +22,7 @@ export const FACTORY_PROFILE = deepFreeze({
     },
     upper: {
       min: 820,
-      max: 895,
+      max: 970,
       start: 820,
       end: 895,
       polarization: 'V',
