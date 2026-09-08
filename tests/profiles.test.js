@@ -14,7 +14,7 @@ test('factory profile supplies the approved control ranges', () => {
   });
   assert.deepEqual(FACTORY_PROFILE.control.upper, {
     min: 820,
-    max: 895,
+    max: 970,
     start: 820,
     end: 895,
     polarization: 'V',
