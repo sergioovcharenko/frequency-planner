@@ -5,6 +5,20 @@ const LEGACY_STORAGE_KEY = 'frequency-planner.settings.v1';
 
 const clone = (value) => structuredClone(value);
 
+const applyCurrentControlLimits = (profile, factoryProfile) => {
+  let changed = false;
+  for (const band of ['lower', 'upper']) {
+    for (const edge of ['min', 'max']) {
+      const current = factoryProfile.control[band][edge];
+      if (profile.control?.[band]?.[edge] !== current) {
+        profile.control[band][edge] = current;
+        changed = true;
+      }
+    }
+  }
+  return changed;
+};
+
 export const createSettingsStore = (storage, factoryProfile) => ({
   load() {
     const raw = storage.getItem(STORAGE_KEY);
@@ -18,6 +32,7 @@ export const createSettingsStore = (storage, factoryProfile) => ({
         const profile = clone(factoryProfile);
         profile.control = clone(legacy.control);
         profile.video = clone(legacy.video);
+        applyCurrentControlLimits(profile, factoryProfile);
         if (validateProfile(profile).length) throw new Error('invalid migrated profile');
         storage.setItem(STORAGE_KEY, JSON.stringify(profile));
         return { profile, notice: 'Локальні налаштування оновлено до нової версії.' };
@@ -31,10 +46,15 @@ export const createSettingsStore = (storage, factoryProfile) => ({
 
     try {
       const profile = JSON.parse(raw);
+      const limitsUpdated = applyCurrentControlLimits(profile, factoryProfile);
       if (profile.schemaVersion !== factoryProfile.schemaVersion || validateProfile(profile).length) {
         throw new Error('invalid profile');
       }
-      return { profile, notice: null };
+      if (limitsUpdated) storage.setItem(STORAGE_KEY, JSON.stringify(profile));
+      return {
+        profile,
+        notice: limitsUpdated ? 'Локальні налаштування оновлено до нової версії.' : null
+      };
     } catch {
       return {
         profile: clone(factoryProfile),
